@@ -1,10 +1,13 @@
+import os
 import smtplib
 import ssl
 import uuid
+from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
 import markdown
+from markdown.extensions.extra import extensions
 
 from MailerConfig import MailerConfig
 
@@ -15,8 +18,14 @@ class Mailer:
         self.port = mailer_config.port
         self.sender_email = mailer_config.sender_email
         self.sender_app_password = mailer_config.sender_app_password
+        self.images = {}
 
-    def send_message(self, receiver_email, subject, body):
+    def add_image(self, image_path: str):
+        cid = str(uuid.uuid4())
+        self.images[cid] = image_path
+        return cid
+
+    def send_message(self, receiver_email, subject, html_body):
         message = MIMEMultipart()
         message["From"] = self.sender_email
         message["To"] = receiver_email
@@ -25,8 +34,14 @@ class Mailer:
         message["Date"] = formatdate(localtime=True)  # Proper timestamp
         # message.attach(MIMEText(body, "plain"))
 
-        html_body = markdown.markdown(body)
         message.attach(MIMEText(html_body, "html"))
+
+        for cid, image_path in self.images.items():
+            with open(image_path, "rb") as img_file:
+                img = MIMEImage(img_file.read())
+                img.add_header("Content-ID", f"<{cid}>")
+                img.add_header("Content-Disposition", "inline", filename=os.path.basename(image_path))
+                message.attach(img)
 
         context = ssl.create_default_context()
         with smtplib.SMTP(self.smtp_server, self.port) as server:

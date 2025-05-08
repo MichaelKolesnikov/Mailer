@@ -14,4 +14,4 @@ You can send email messages automatically using this project.
    Email,FirstName,LastName,Affiliation
    ...
    ```
-5. Create your `subject.txt` and `body.md`
+5. Create your `subject.txt` and `body.html`
