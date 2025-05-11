@@ -25,8 +25,8 @@ class Mailer:
         message["Date"] = formatdate(localtime=True)  # Proper timestamp
         # message.attach(MIMEText(body, "plain"))
 
-        html_body = markdown.markdown(body)
-        message.attach(MIMEText(html_body, "html"))
+        # html_body = markdown.markdown(body)
+        message.attach(MIMEText(body, "plain"))
 
         context = ssl.create_default_context()
         with smtplib.SMTP(self.smtp_server, self.port) as server:

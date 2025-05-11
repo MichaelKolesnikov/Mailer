@@ -16,23 +16,31 @@ def main():
     mailer_config = MailerConfig(sender_email, sender_app_password)
     mailer = Mailer(mailer_config)
 
-    with open("people.csv", 'r', encoding='utf-8') as file:
+    with open("subject.txt") as subject_file:
+        subject_template = subject_file.read()
+
+    with open("body.txt") as body_file:
+        body_template = body_file.read()
+
+    with open("addressees1.csv", 'r', encoding='utf-8') as file:
         headers = file.readline()
         reader = csv.reader(file)
         for row in reader:
-            email_address, first_name, last_name, affiliation = row
+            full_name, email_address, first_name, last_name, affiliation = row
 
             try:
-                with open("subject.txt") as subject_file:
-                    subject = subject_file.read()
-
-                with open("body.md") as body_file:
-                    body = f"**Dear {first_name} {last_name},**\n" + body_file.read()
-
                 mailer.send_message(
                     receiver_email=email_address,
-                    subject=subject,
-                    body=body
+                    subject=subject_template
+                        .replace(
+                        "{full_name_with_affiliation}",
+                        (full_name or f"{first_name} {last_name}") + ("" if not affiliation else f", {affiliation}")
+                    ),
+                    body=body_template
+                        .replace("{first_name}", first_name)
+                        .replace("{last_name}", last_name)
+                        .replace("{full_name}", full_name)
+                        .replace("{affiliation}", affiliation)
                 )
                 print(f"Email to {email_address} sent successfully!")
             except Exception as e:
